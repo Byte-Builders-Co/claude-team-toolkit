@@ -10,7 +10,8 @@ Analyse one person's own Claude usage. There are no other users to compare with,
     - `tool_result` blocks;
     - meta, system and command-output messages, such as `<command-name>`, `<local-command-stdout>`, `<system-reminder>`-only content and hook output;
     - interrupt markers;
-    - sidechain/subagent events (`isSidechain: true`).
+    - sidechain/subagent events (`isSidechain: true`);
+    - (v2) IDE auto-attached context (`<ide_…>` blocks), interrupt markers (`[Request interrupted…]`, counted as interrupts), and housekeeping slash commands (`/clear`, `/compact`, `/login`, `/restart` …, counted separately).
   - **Inspect the real keys before trusting any of these.**
   - **Field notes (Claude Code v2.x, verified Nov 2026):**
     - Also exclude `isCompactSummary: true`, `turnOrigin: "task_notification"` and texts starting "Below is a conversation log".
@@ -88,7 +89,7 @@ Label any verdict without limit evidence as "proxy".
 - **What to read:** the opening prompt (first ~1,500 characters) and up to 4 follow-ups (first ~300 characters each).
 - **Saving:** save scores to a CSV in batches.
 
-Score each conversation from 1 to 5 on these dimensions. Use the same rubric as [ORG-METHODOLOGY.md](ORG-METHODOLOGY.md), step 4b:
+Score each conversation from 1 to 5 on these dimensions, using the anchor examples, the OUTCOME evidence and the fixed labels in [RUBRIC.md](RUBRIC.md):
 1. Goal clarity
 2. Context
 3. Specificity & constraints

@@ -11,6 +11,11 @@ Writes (OUT):
   sample_index.csv        sample ids -> sessions     (PRIVATE)
   repeated_phrases.json   phrases repeated across sessions, for the CLAUDE.md snippet (PRIVATE)
 """
+import sys as _sys
+try:
+    _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 import argparse, json, glob, os, re, csv, collections, statistics, random, subprocess, calendar
 from datetime import datetime, date, timedelta
 

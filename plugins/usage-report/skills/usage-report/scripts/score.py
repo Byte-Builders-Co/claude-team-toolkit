@@ -8,6 +8,11 @@ judged_scores.csv columns: sample_id,date,project,goal,context,specificity,outpu
    use_case and complexity must use the fixed lists in kpis.py)
 Writes: DIR/scores.json
 """
+import sys as _sys
+try:
+    _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 import argparse, csv, json, os, statistics, glob
 from datetime import date
 from kpis import kpis, KPI_DEFS, USE_CASES, COMPLEXITY

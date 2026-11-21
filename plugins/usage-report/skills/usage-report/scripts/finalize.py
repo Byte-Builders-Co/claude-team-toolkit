@@ -9,6 +9,11 @@ Writes: DIR/targets.json                       next month's 3 targets (read by s
         ~/.claude/prompt-coach/profile.json    focus areas, tips and templates for the prompt-coach plugin
                                                (existing "settings" are kept; use --no-profile to skip)
 """
+import sys as _sys
+try:
+    _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 import argparse, json, os, re
 from datetime import date
 from kpis import KPI_DEFS
