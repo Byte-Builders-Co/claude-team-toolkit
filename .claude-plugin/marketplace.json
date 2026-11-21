@@ -4,8 +4,8 @@
   "description": "Byte-Builders team toolkit for Claude Code: monthly usage reports and the prompt coach.",
   "plugins": [
     {
-      "name": "claude-usage-report",
-      "source": "./plugins/claude-usage-report",
+      "name": "usage-report",
+      "source": "./plugins/usage-report",
       "description": "Monthly Claude Code usage and prompt-quality report with Hindi/Gujarati coaching."
     }
   ]

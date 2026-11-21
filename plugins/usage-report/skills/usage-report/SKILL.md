@@ -1,5 +1,5 @@
 ---
-name: claude-usage-report
+name: usage-report
 description: Builds a Claude usage and prompt-quality report with a Leverage Score, plan-fit verdict, trends and coaching, either for one person's own account (local Claude Code transcripts plus an optional claude.ai export) or for a whole Team/Enterprise organisation. Use when the user wants to review their own Claude usage, prompt quality, Pro/Max plan fit, or an org adoption/seat report, or mentions a Claude data export or "usage KPI report".
 ---
 

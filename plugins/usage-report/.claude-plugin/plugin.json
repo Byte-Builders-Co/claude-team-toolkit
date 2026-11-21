@@ -1,5 +1,5 @@
 {
-  "name": "claude-usage-report",
+  "name": "usage-report",
   "description": "Monthly Claude Code usage and prompt-quality report with a Leverage Score, coaching, prompt templates and progress tracking.",
   "version": "1.0.0",
   "author": { "name": "Byte-Builders-Co" }
