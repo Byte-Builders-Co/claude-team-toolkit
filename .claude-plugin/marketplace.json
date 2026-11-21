@@ -1,12 +1,19 @@
 {
   "name": "byte-builders-claude",
-  "owner": { "name": "Byte-Builders-Co" },
+  "owner": {
+    "name": "Byte-Builders-Co"
+  },
   "description": "Byte-Builders team toolkit for Claude Code: monthly usage reports and the prompt coach.",
   "plugins": [
     {
       "name": "usage-report",
       "source": "./plugins/usage-report",
       "description": "Monthly Claude Code usage and prompt-quality report with Hindi/Gujarati coaching."
+    },
+    {
+      "name": "prompt-coach",
+      "source": "./plugins/prompt-coach",
+      "description": "Restates vague prompts as Goal / Scope / Done when with a Hindi or Gujarati tip, stops bare pastes, and adds /prompt-coach:p."
     }
   ]
 }

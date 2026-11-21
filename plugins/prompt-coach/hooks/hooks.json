@@ -1,0 +1,17 @@
+{
+  "description": "Prompt coach: restates vague prompts and stops bare pastes. Fails open: any error lets the prompt through unchanged.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/coach.js"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -107,11 +107,14 @@ Also tag each conversation with a use case and a complexity. Judge against what 
 
 | Component | Points | Formula (the benchmarks are adjustable; list them in the report) |
 |---|---|---|
-| Engagement | 30 | `30 × min(1, active-day rate ÷ 0.60)` |
-| Depth | 15 | `15 × min(1, prompts per working day ÷ 20)` |
-| Breadth | 15 | `15 × min(1, breadth ÷ min(6, detectable capabilities))` |
+| Engagement | 20 | `20 × min(1, active-day rate ÷ 0.70)` (working days from team-config.json, holidays removed) |
+| Depth | 10 | `10 × min(1, prompts per working day ÷ 20)` |
+| Breadth | 10 | `10 × min(1, breadth ÷ min(6, detectable capabilities))` |
 | Prompt quality | 30 | `30 × prompt-quality score ÷ 100` |
+| Practices | 20 | `20 × mean of min(1, done-check share of openers ÷ 0.40), min(1, verify rate ÷ 0.60), min(1, plan-on-big rate ÷ 0.50), 1 − min(1, share of prompts in 30+ prompt sessions ÷ 0.50)`; leave out parts that can't be measured |
 | Outcomes | 10 | `10 × mean of (1 − correction rate)`, plus `(1 − edit rejection rate)` if Claude Code was used |
+
+Method v2 (Dec 2026) moved 35 points from engagement, depth and breadth, which every team member maxed out, into Practices. Tiers therefore shift; don't compare a v2 Leverage Score with a v1 one.
 
 If a component is N/A, rescale the remaining weights to 100 and mark the score "partial".
 

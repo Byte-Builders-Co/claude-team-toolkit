@@ -263,6 +263,10 @@ for f in files:
             own_words = len(re.sub(r"\[Image[^\]]*\]", " ", own).split())
             log_hits = len(LOG_RE.findall(clean))
             looks_log = ("<pasted_content" in txt) or (clean.count("\n") >= 4 and log_hits >= 2)
+            if looks_log and "<pasted_content" not in txt:
+                # untagged paste: only non-log lines count as the person's own words
+                own_lines = [l for l in own.split("\n") if not LOG_RE.search(l) and not re.match(r"^\s+(at |#\d|\d+\s*\|)", l)]
+                own_words = len(" ".join(own_lines).split())
             cwd = e.get("cwd") or ""
             cwd_prompts[cwd] += 1
             sess[sid]["cwd"] = sess[sid]["cwd"] or cwd
