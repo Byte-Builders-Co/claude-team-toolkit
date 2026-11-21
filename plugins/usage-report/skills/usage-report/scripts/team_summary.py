@@ -49,6 +49,18 @@ hist["months"][args.label] = {"period": [min(p[0] for p in periods if p), max(p[
 hist["months"] = dict(sorted(hist["months"].items()))
 json.dump(hist, open(args.history, "w", encoding="utf-8"), indent=1)
 
+# Flat CSV of every month for the team dashboard: one row per month x member x KPI ("" = not measured).
+import csv
+csv_path = os.path.join(os.path.dirname(os.path.abspath(args.history)), "kpi_history.csv")
+with open(csv_path, "w", encoding="utf-8", newline="") as fh:
+    w = csv.writer(fh)
+    w.writerow(["month", "member", "kpi", "label", "better", "unit", "value", "method_version"])
+    for label_m, mo in hist["months"].items():
+        for who, info in list(mo["members"].items()) + [("Team median", {"kpis": mo["team"], "method_version": ""})]:
+            for k, (label, better, unit) in KPI_DEFS.items():
+                v = info["kpis"].get(k)
+                w.writerow([label_m, who, k, label, better, unit, "" if v is None else v, info.get("method_version", "")])
+
 
 def fmt(k, v):
     if v is None:
