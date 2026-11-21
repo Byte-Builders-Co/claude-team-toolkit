@@ -1,0 +1,111 @@
+"""Turn the report into things the person can use right away (B3, B4, B7) and refresh the prompt-coach profile.
+
+Usage: python finalize.py --out DIR [--no-profile]
+Reads:  DIR/metrics.json, DIR/scores.json, DIR/narrative.json
+Writes: DIR/targets.json                       next month's 3 targets (read by score.py next month)
+        DIR/suggested/CLAUDE.md-snippet.md     rules the person keeps retyping, ready to paste into a project CLAUDE.md
+        DIR/suggested/settings.allowlist.json  permissions.allow entries for commands they approve over and over
+        DIR/suggested/commands/<name>.md       draft slash commands for repeated multi-step tasks
+        ~/.claude/prompt-coach/profile.json    focus areas, tips and templates for the prompt-coach plugin
+                                               (existing "settings" are kept; use --no-profile to skip)
+"""
+import argparse, json, os, re
+from datetime import date
+from kpis import KPI_DEFS
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--out", required=True)
+ap.add_argument("--no-profile", action="store_true")
+args = ap.parse_args()
+OUT = os.path.abspath(os.path.expanduser(args.out))
+
+
+def load(name):
+    with open(os.path.join(OUT, name), encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+m, s, nar = load("metrics.json"), load("scores.json"), load("narrative.json")
+lang = nar.get("language") or "hi"
+SUG = os.path.join(OUT, "suggested")
+os.makedirs(os.path.join(SUG, "commands"), exist_ok=True)
+
+# B7 targets
+targets = []
+for t in nar.get("targets") or []:
+    if t.get("metric") not in KPI_DEFS:
+        raise SystemExit(f"narrative.targets: unknown metric '{t.get('metric')}'. Use one of {list(KPI_DEFS)}")
+    targets.append({"metric": t["metric"], "label": KPI_DEFS[t["metric"]][0], "target": t["target"],
+                    "baseline": (s.get("kpis") or {}).get(t["metric"]), "text": t.get("text", "")})
+with open(os.path.join(OUT, "targets.json"), "w", encoding="utf-8") as fh:
+    json.dump(targets, fh, indent=1, ensure_ascii=False)
+
+# B3 CLAUDE.md snippet
+lines = nar.get("claude_md_snippet") or []
+if lines:
+    with open(os.path.join(SUG, "CLAUDE.md-snippet.md"), "w", encoding="utf-8") as fh:
+        fh.write("## Working rules (from my monthly Claude report)\n\n")
+        fh.write("\n".join(f"- {x}" for x in lines) + "\n")
+
+# B4 permissions allowlist
+# Never suggest a bare interpreter (python, node, php ...) or tools that act outside the machine (gh, docker):
+# those would let any script run without asking. Only "tool subcommand" pairs such as "npm run" or "php artisan".
+BROAD = {"python", "python3", "py", "node", "php", "php.bat", "bun", "npx", "make", "go", "cargo", "dotnet", "pip"}
+allow = [f"Bash({k} *)" for k, _ in m.get("allowlist_candidates") or []
+         if " " in k and k.split()[0].lower() not in ("gh", "docker") and k.lower() not in ("git commit",)
+         or (" " not in k and k.lower() not in BROAD and k.split("/")[-1] in ("pint", "phpstan", "pest", "phpunit", "eslint", "tsc"))]
+with open(os.path.join(SUG, "settings.allowlist.json"), "w", encoding="utf-8") as fh:
+    json.dump({"permissions": {"allow": allow}}, fh, indent=1)
+
+# B4 draft slash commands
+for c in nar.get("slash_commands") or []:
+    name = re.sub(r"[^a-z0-9-]+", "-", str(c.get("name", "")).lower()).strip("-")
+    if not name:
+        continue
+    with open(os.path.join(SUG, "commands", f"{name}.md"), "w", encoding="utf-8") as fh:
+        fh.write(f"---\ndescription: {c.get('description', '').strip()}\nargument-hint: [details]\n---\n\n{c.get('body', '').strip()}\n")
+
+# Prompt-coach profile
+k = s.get("kpis") or {}
+sig, pr = m.get("signals") or {}, m.get("practices") or {}
+focus = []
+if (sig.get("pct_done_check_openers") or 0) < 0.30:
+    focus.append("done_check")
+if (s.get("dimension_means") or {}).get("context", 5) < 3.2 or (sig.get("pct_context") or 0) < 0.15:
+    focus.append("context")
+if (sig.get("pct_bare_paste") or 0) > 0.03 or (sig.get("pct_image_only") or 0) > 0.03:
+    focus.append("bare_paste")
+if (m.get("pct_prompts_in_long_sessions") or 0) > 0.25 or (m.get("max_prompts_per_session") or 0) > 60:
+    focus.append("long_sessions")
+if pr.get("plan_on_big_rate") is not None and pr["plan_on_big_rate"] < 0.30:
+    focus.append("plan_mode")
+
+profile_written = None
+if not args.no_profile:
+    pdir = os.path.join(os.path.expanduser("~"), ".claude", "prompt-coach")
+    os.makedirs(pdir, exist_ok=True)
+    ppath = os.path.join(pdir, "profile.json")
+    old = {}
+    if os.path.exists(ppath):
+        try:
+            old = json.load(open(ppath, encoding="utf-8"))
+        except Exception:
+            old = {}
+    profile = {
+        "version": 1,
+        "name": nar.get("person") or old.get("name"),
+        "language": old.get("language") or lang,
+        "focus": focus,
+        "tips": nar.get("coach_tips") or old.get("tips") or [],
+        "templates": [{"task": t.get("task"), "template": t.get("template")} for t in (nar.get("templates") or [])] or old.get("templates", []),
+        "settings": old.get("settings") or {},
+        "updated": date.today().isoformat(),
+        "source": f"usage-report {m['period'][0]}..{m['period'][1]}",
+    }
+    with open(ppath, "w", encoding="utf-8") as fh:
+        json.dump(profile, fh, indent=1, ensure_ascii=False)
+    profile_written = ppath
+
+print(json.dumps({"targets": len(targets), "claude_md_rules": len(lines), "allowlist": len(allow),
+                  "slash_commands": len(nar.get("slash_commands") or []), "focus": focus,
+                  "profile": profile_written}, ensure_ascii=False))
