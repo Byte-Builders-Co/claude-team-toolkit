@@ -1,0 +1,14 @@
+{
+  "team": "Byte-Builders-Co",
+  "timezone": "Asia/Kolkata",
+  "workdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  "holidays": [
+    "2026-11-07", "2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14"
+  ],
+  "plan": "Pro",
+  "price_month": 20,
+  "currency": "USD",
+  "language": "hi",
+  "sample_size": 45,
+  "method_version": 2
+}

@@ -1,0 +1,14 @@
+# Never commit report output, raw prompts or personal coach profiles
+*.docx
+metrics.json
+scores.json
+prompts.csv
+sample.txt
+sample_index.csv
+judged_scores.csv
+narrative.json
+repeated_phrases.json
+profile.json
+node_modules/
+__pycache__/
+.DS_Store
