@@ -152,8 +152,9 @@ if not args.no_prev:
                 continue
             try:
                 pm = json.load(open(os.path.join(d, "metrics.json"), encoding="utf-8"))
-                if pm["period"][1] < m["period"][0]:
-                    cands.append((pm["period"][1], d))
+                # an earlier report = one that started earlier (v1 reports were rolling 30-day windows that overlap)
+                if pm["period"][0] < m["period"][0]:
+                    cands.append((pm["period"][0], d))
             except Exception:
                 continue
         prev_dir = max(cands)[1] if cands else None
