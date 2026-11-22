@@ -19,6 +19,10 @@ const LOG_RE = /(error|exception|traceback|warning|failed|fatal|sqlstate|stack t
 const LOG_LINE_RE = new RegExp(LOG_RE.source, 'i');
 const DONE_RE = /(done when|should (now )?(show|display|pass|work|be|look|open|return)|expected|verify|confirm|make sure|ensure|run (the )?(tests?|lint|build|pest|phpunit|phpstan|playwright)|tests? (must |should )?pass|until (it|the|all)|acceptance|must (pass|show|work)|check (that|in the browser|on mobile)|at \d{3,4}px|hona chahiye|dikhna chahiye|chalna chahiye|pass hon?a? chahiye|thay tyare|hovu joie)/i;
 const VAGUE_RE = /^(pls |please )?(check (this|it|all)|fix (this|it)|still (not|same)|not work(ing)?( proper(ly)?)?|do (continue|it)|continue|proper(ly)?|perfect|same (issue|error|problem)|nai yaar|nahi yaar|maja nai?h?i? aya|kuch (kro|karo)|thik (kro|karo)|sahi (kro|karo)|aur (acha|accha))\b/i;
+// Says where: a file, path, page, screen or code element. Used for the "context" focus.
+const LOCATION_RE = /(\w\.(php|tsx?|jsx?|vue|py|css|scss|html|json|sql|blade|md|ya?ml|env)\b|[\w-]+\/[\w-]|\\\w|`|\b(page|screen|modal|popup|component|controller|model|migration|route|api|endpoint|table|column|function|method|class|button|form|section|footer|header|navbar|sidebar|menu|dashboard|login|signup|checkout|cart|report|template|view|service|job|command)s?\b)/i;
+// Looks like a multi-file task. Used for the "plan_mode" focus.
+const BIG_RE = /(refactor|migrat|redesign|rewrite|from scratch|whole|entire|across|all (the )?(pages|screens|files|modules|controllers|apis|tables|components)|every (page|screen|file|module|controller|component)|new (module|feature)|implement|integrat|poore|pura|saare|sabhi|badha)/i;
 const SHORT_REPLY_RE = /^(y|yes|yeah|yep|no|nope|ok|okay|k|go|go ahead|continue|proceed|done|thanks|thank you|ty|haan|ha|han|nahi|na|theek hai|thik hai|sahi hai|ho|hā|chalo|option \w|[a-d]|\d+|(\d+\s*[.):-]\s*[\w-]+[\s,]*)+)[.!]*$/i;
 
 const DEFAULT_SETTINGS = { enabled: true, block_mode: 'block', block_until: null, min_words: 12, long_session_prompts: 30, tip_every: 3 };
@@ -126,6 +130,9 @@ function decide(input, profile, state, now) {
   const hasDone = DONE_RE.test(own);
   const followup = state.count > 0;
   const flags = [];
+  // Focus areas come from the person's monthly report (approved by the lead). Each one makes the coach stricter
+  // on that habit only.
+  const focus = new Set(Array.isArray(profile.focus) ? profile.focus : []);
 
   // Short answer to a question Claude just asked: never coach.
   if (followup && ownWords <= 15 && !looksLog && (SHORT_REPLY_RE.test(own) || input._askedLast)) {
@@ -135,8 +142,8 @@ function decide(input, profile, state, now) {
   const ctx = [];
   let action = 'none';
   // Layer 2: bare paste / image only.
-  const barePaste = looksLog && ownWords < 6;
-  const imageOnly = hasImage && ownWords < 4 && !looksLog;
+  const barePaste = looksLog && ownWords < (focus.has('bare_paste') ? 10 : 6);
+  const imageOnly = hasImage && ownWords < (focus.has('bare_paste') ? 8 : 4) && !looksLog;
   if (barePaste || imageOnly) {
     flags.push(barePaste ? 'bare_paste' : 'image_only');
     const blockOn = settings.block_mode === 'block' && barePaste && (!settings.block_until || now <= settings.block_until);
@@ -156,15 +163,23 @@ function decide(input, profile, state, now) {
     // Layer 1: restate vague or incomplete requests.
     const vague = VAGUE_RE.test(own);
     const shortNoDone = ownWords < settings.min_words && !hasDone;
-    const openerNoDone = !followup && !hasDone && ownWords < 40;
+    const openerNoDone = !followup && !hasDone && ownWords < (focus.has('done_check') ? 80 : 40);
+    // done_check focus: a new instruction in the middle of a session also needs a done-check.
+    const newTaskNoDone = focus.has('done_check') && followup && !hasDone && ownWords >= 20;
+    const noLocation = focus.has('context') && !followup && !LOCATION_RE.test(own);
+    const bigTask = focus.has('plan_mode') && !followup && input.permission_mode !== 'plan' && BIG_RE.test(own);
     if (vague) flags.push('vague');
     if (shortNoDone) flags.push('short');
     if (!hasDone) flags.push('no_done_check');
-    if (vague || shortNoDone || openerNoDone) {
+    if (noLocation) flags.push('no_location');
+    if (bigTask) flags.push('big_task');
+    if (vague || shortNoDone || openerNoDone || newTaskNoDone || noLocation || bigTask) {
       action = 'coach';
       state.flagged = (state.flagged || 0) + 1;
       const showTip = state.flagged % Math.max(1, settings.tip_every) === 1 || settings.tip_every <= 1;
-      const missing = [!hasDone && 'a done-check (how to know it worked)', ownWords < settings.min_words && 'detail about what and where', vague && 'what exactly is wrong or wanted'].filter(Boolean).join(', ');
+      const missing = [!hasDone && 'a done-check (how to know it worked)', ownWords < settings.min_words && 'detail about what and where',
+        vague && 'what exactly is wrong or wanted', noLocation && 'which file, page or screen it is about',
+        bigTask && 'a plan (this looks like a multi-file task)'].filter(Boolean).join(', ');
       ctx.push(
         `[prompt-coach] This message may be missing: ${missing}.`,
         followup
@@ -173,6 +188,12 @@ function decide(input, profile, state, now) {
         'If the goal or the done-check really cannot be inferred and the work would change several files or take more than a few minutes, ask ONE question (AskUserQuestion with 2-4 options) and wait. Otherwise continue with the work using your restated version.',
         'Do not lecture and do not mention this note.',
       );
+      if (noLocation) {
+        ctx.push('It does not say which file, page or screen. Find it from the code first; if more than one place fits, ask which one (AskUserQuestion with the likely places as options) before editing.');
+      }
+      if (bigTask) {
+        ctx.push(`This looks like a multi-file task. Before editing any file, give a short numbered plan (files and steps) and ask "Go ahead?" (AskUserQuestion), then wait. In that message add one line in ${M.langName} saying that for tasks this big they can press Shift+Tab for plan mode before sending.`);
+      }
       if (showTip) {
         const tips = (profile.tips && profile.tips.length ? profile.tips : M.defaultTips);
         const tip = tips[(state.tipsShown || 0) % tips.length];
@@ -186,8 +207,9 @@ function decide(input, profile, state, now) {
 
   // Long sessions: one nudge at the threshold, then every 15 prompts.
   const n = state.count + 1;
-  const T = settings.long_session_prompts;
-  if (T && n >= T && (n === T || (n - T) % 15 === 0)) {
+  const longFocus = focus.has('long_sessions');
+  const T = longFocus && settings.long_session_prompts ? Math.min(settings.long_session_prompts, 20) : settings.long_session_prompts;
+  if (T && n >= T && (n === T || (n - T) % (longFocus ? 10 : 15) === 0)) {
     flags.push('long_session');
     if (action === 'none') action = 'long_session';
     ctx.push(`[prompt-coach] This session now has ${n} prompts. At the end of your reply add one line in ${M.langName}: "${M.tipPrefix} ${M.longSession}"`);

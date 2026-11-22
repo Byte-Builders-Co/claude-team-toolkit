@@ -66,6 +66,47 @@ const okPriv = !/SQLSTATE|professional|footer|checkout/i.test(logText);
 if (!okPriv) fail += 1;
 console.log(`${okPriv ? 'PASS' : 'FAIL'}  log has no prompt text`);
 
+// ---- Focus areas (1.0.3): the same prompt is coached only for the person whose report flagged that habit. ----
+function runWith(profile, input) {
+  fs.writeFileSync(path.join(tmp, 'profile.json'), JSON.stringify(profile));
+  const r = spawnSync(process.execPath, [COACH], { input: JSON.stringify(input), env: { ...process.env, PROMPT_COACH_DIR: tmp }, encoding: 'utf8' });
+  const out = r.stdout ? JSON.parse(r.stdout) : null;
+  return out === null ? 'none' : out.decision === 'block' ? 'block' : out.hookSpecificOutput.additionalContext;
+}
+const base = { language: 'hi', settings: { block_mode: 'block', block_until: future, tip_every: 1 } };
+const long45 = 'Add a dark mode option to the settings page so users can switch between light and dark themes, remember the choice per user in the database, and update the header, sidebar, tables and all form inputs use the right colours in both themes';
+const noWhere = 'Make the totals match the invoice amounts exactly. Done when the totals test passes.';
+const big = 'Refactor the booking module so every controller uses the new pricing service. Done when all booking tests pass.';
+const paste7 = `look at this one please thanks\n${LOG}`;
+let sid = 100;
+const focusCases = [
+  ['long opener, no focus (none)', base, { prompt: long45 }, (g) => g === 'none'],
+  ['long opener, done_check focus (coach)', { ...base, focus: ['done_check'] }, { prompt: long45 }, (g) => /Restated/.test(g)],
+  ['no file/page, no focus (none)', base, { prompt: noWhere }, (g) => g === 'none'],
+  ['no file/page, context focus (asks where)', { ...base, focus: ['context'] }, { prompt: noWhere }, (g) => /which file, page or screen/.test(g)],
+  ['multi-file task, no focus (none)', base, { prompt: big }, (g) => g === 'none'],
+  ['multi-file task, plan_mode focus (plan first)', { ...base, focus: ['plan_mode'] }, { prompt: big }, (g) => /numbered plan/.test(g) && /Shift\+Tab/.test(g)],
+  ['multi-file task, already in plan mode (none)', { ...base, focus: ['plan_mode'] }, { prompt: big, permission_mode: 'plan' }, (g) => g === 'none'],
+  ['paste + 5 words, no focus (coach, not block)', base, { prompt: paste7 }, (g) => g !== 'block'],
+  ['paste + 5 words, bare_paste focus (block)', { ...base, focus: ['bare_paste'] }, { prompt: paste7 }, (g) => g === 'block'],
+  ['unknown focus value is ignored', { ...base, focus: ['nonsense', 42] }, { prompt: noWhere }, (g) => g === 'none'],
+];
+for (const [name, profile, input, check] of focusCases) {
+  const got = runWith(profile, { ...input, session_id: `f${sid++}` });
+  const ok = check(got);
+  if (!ok) fail += 1;
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : '  got: ' + String(got).slice(0, 120)}`);
+}
+// long_sessions focus: nudge at prompt 20 instead of 30.
+for (const [name, profile, expectNudge] of [['prompt 20, no focus (no nudge)', base, false], ['prompt 20, long_sessions focus (nudge)', { ...base, focus: ['long_sessions'] }, true]]) {
+  const s = `L${sid++}`;
+  fs.writeFileSync(path.join(tmp, 'state', `${s}.json`), JSON.stringify({ count: 19, flagged: 0, tipsShown: 0 }));
+  const got = runWith(profile, { prompt: 'In site-footer.tsx make the links bold. Done when it looks right at 375px.', session_id: s });
+  const ok = /session now has 20 prompts/.test(got) === expectNudge;
+  if (!ok) fail += 1;
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`);
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(fail ? `\n${fail} failed` : '\nall passed');
 process.exit(fail ? 1 : 0);

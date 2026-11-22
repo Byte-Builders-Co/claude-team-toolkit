@@ -56,6 +56,14 @@ Never share `prompts.csv`, `sample.txt`, `narrative.json` or `suggested/`. They 
 
 ## Release notes
 
+**prompt-coach v1.0.3**
+- The coach now uses each person's `focus` areas from their profile, so it is stricter only on that person's weak habits:
+  - `done_check`: opening prompts up to 80 words (not 40) without "done when" are restated, and so are new instructions of 20+ words mid-session.
+  - `context`: opening prompts that name no file, page or screen make Claude find the place first, and ask if more than one fits.
+  - `bare_paste`: a paste with fewer than 10 words of instruction (not 6) counts as a bare paste.
+  - `long_sessions`: the "start a new session" nudge comes at 20 prompts (not 30), then every 10.
+  - `plan_mode`: multi-file tasks sent outside plan mode get a short plan and a "Go ahead?" before any edit, plus a Shift+Tab reminder.
+
 **v1.0.0 (Dec 2026)**
 - usage-report method v2: team working week and holidays; `/clear` and other housekeeping commands no longer count as prompts; IDE auto-context removed; new habits (done-check, bare pastes, verify rate, plan mode on big tasks, long sessions); Leverage v2 with Practices; fixed labels and a rubric with examples; progress vs last month and targets; Hindi/Gujarati reports; templates, the most expensive session, and ready-made files; team mode.
 - prompt-coach v1.0.0: three layers (restate, stop bare pastes, `/prompt-coach:p`).
