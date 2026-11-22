@@ -1,0 +1,19 @@
+{
+  "description": "Monthly report reminder: on the first working days of a month, reminds the person to run /usage-report if last month's report is not in their Google Drive folder yet. Fails open.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/remind.js"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

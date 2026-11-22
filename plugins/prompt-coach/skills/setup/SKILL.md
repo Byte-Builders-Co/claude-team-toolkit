@@ -22,4 +22,5 @@ argument-hint: "[status | import <file> | language hi|gu | block on|off|ask | di
 After any change, show the saved settings in one short line in the person's language, and explain the coach accurately:
 - It runs automatically on every prompt; nothing needs to be typed. When a prompt is vague or short and has no "done when", Claude's reply starts with a **Restated:** line (simple English) and sometimes ends with a 💡 tip.
 - Block mode stops ONLY a paste (log/error output) sent with no instruction. Short prompts are never blocked; they are restated.
-- `/prompt-coach:p` is optional, for turning a rough idea into a full prompt before running it. Remind them that the monthly `/usage-report` run refreshes the tips and templates in the profile automatically.
+- `/prompt-coach:p` is optional, for turning a rough idea into a full prompt before running it.
+- Tips, templates and focus areas come from the team lead. After each monthly `/usage-report`, the lead reviews the report and approves coach updates; the coach loads them from the person's Google Drive folder at the start of a Claude Code session and says once what changed. If `~/.claude/usage-report.local.json` has no `share_dir`, tell them to run `/usage-report share "<their Drive folder>"` once.

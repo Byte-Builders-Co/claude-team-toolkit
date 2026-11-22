@@ -1,6 +1,8 @@
 {
   "name": "prompt-coach",
   "description": "Checks each prompt before Claude works on it. Vague prompts get restated as Goal / Scope / Done when, with a short Hindi or Gujarati tip; bare pastes are stopped with a one-line fix. Includes /prompt-coach:p to turn a rough idea into a structured prompt.",
-  "version": "1.0.3",
-  "author": { "name": "Byte-Builders-Co" }
+  "version": "1.1.0",
+  "author": {
+    "name": "Byte-Builders-Co"
+  }
 }

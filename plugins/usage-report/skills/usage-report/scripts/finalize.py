@@ -6,8 +6,9 @@ Writes: DIR/targets.json                       next month's 3 targets (read by s
         DIR/suggested/CLAUDE.md-snippet.md     rules the person keeps retyping, ready to paste into a project CLAUDE.md
         DIR/suggested/settings.allowlist.json  permissions.allow entries for commands they approve over and over
         DIR/suggested/commands/<name>.md       draft slash commands for repeated multi-step tasks
-        ~/.claude/prompt-coach/profile.json    focus areas, tips and templates for the prompt-coach plugin
-                                               (existing "settings" are kept; use --no-profile to skip)
+        DIR/coach-draft.json                   proposed coach focus, tips and templates + coach counts (uploaded for the lead)
+        ~/.claude/prompt-coach/profile.json    only when team-config "approval_required" is false; otherwise the lead
+                                               approves the draft (approve.py) and the coach loads it from Google Drive
 """
 import sys as _sys
 try:
@@ -85,32 +86,66 @@ if (m.get("pct_prompts_in_long_sessions") or 0) > 0.25 or (m.get("max_prompts_pe
 if pr.get("plan_on_big_rate") is not None and pr["plan_on_big_rate"] < 0.30:
     focus.append("plan_mode")
 
-profile_written = None
-if not args.no_profile:
-    pdir = os.path.join(os.path.expanduser("~"), ".claude", "prompt-coach")
-    os.makedirs(pdir, exist_ok=True)
-    ppath = os.path.join(pdir, "profile.json")
+pdir = os.environ.get("PROMPT_COACH_DIR") or os.path.join(os.path.expanduser("~"), ".claude", "prompt-coach")
+ppath = os.path.join(pdir, "profile.json")
+try:
+    old = json.load(open(ppath, encoding="utf-8"))
+except Exception:
     old = {}
-    if os.path.exists(ppath):
+
+# How often the coach stepped in during the report period (counts only; the log never holds prompt text).
+coach_stats = {"prompts_checked": 0}
+try:
+    p0, p1 = m["period"][0], m["period"][1]
+    for line in open(os.path.join(pdir, "log.jsonl"), encoding="utf-8"):
         try:
-            old = json.load(open(ppath, encoding="utf-8"))
+            r = json.loads(line)
         except Exception:
-            old = {}
-    profile = {
-        "version": 1,
-        "name": nar.get("person") or old.get("name"),
-        "language": old.get("language") or lang,
-        "focus": focus,
-        "tips": nar.get("coach_tips") or old.get("tips") or [],
-        "templates": [{"task": t.get("task"), "template": t.get("template")} for t in (nar.get("templates") or [])] or old.get("templates", []),
-        "settings": old.get("settings") or {},
-        "updated": date.today().isoformat(),
-        "source": f"usage-report {m['period'][0]}..{m['period'][1]}",
-    }
+            continue
+        if not (p0 <= str(r.get("ts", ""))[:10] <= p1):
+            continue
+        coach_stats["prompts_checked"] += 1
+        coach_stats[r.get("action") or "none"] = coach_stats.get(r.get("action") or "none", 0) + 1
+        for f in r.get("flags") or []:
+            coach_stats["flag_" + f] = coach_stats.get("flag_" + f, 0) + 1
+except Exception:
+    pass
+
+# The coach changes this report proposes. With approval_required (team-config), the team lead reviews and approves
+# them first (approve.py), and the coach picks up the approved profile from Google Drive. Nothing changes locally.
+draft = {
+    "name": nar.get("person") or old.get("name"),
+    "month": os.path.basename(OUT.rstrip("/\\")),
+    "period": m["period"],
+    "language": old.get("language") or lang,
+    "focus": focus,
+    "tips": nar.get("coach_tips") or old.get("tips") or [],
+    "templates": [{"task": t.get("task"), "template": t.get("template")} for t in (nar.get("templates") or [])] or old.get("templates", []),
+    "current": {k: old.get(k) for k in ("focus", "settings", "approved_rev", "approved_month")},
+    "coach_stats": coach_stats,
+    "created": date.today().isoformat(),
+}
+with open(os.path.join(OUT, "coach-draft.json"), "w", encoding="utf-8") as fh:
+    json.dump(draft, fh, indent=1, ensure_ascii=False)
+
+CFG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "team-config.json")
+try:
+    approval = json.load(open(CFG_PATH, encoding="utf-8")).get("approval_required", False)
+except Exception:
+    approval = False
+
+profile_written = None
+if not args.no_profile and not approval:
+    # No team lead in the loop: update the coach directly.
+    profile = {**old, "version": 1, "name": draft["name"], "language": draft["language"], "focus": focus,
+               "tips": draft["tips"], "templates": draft["templates"], "settings": old.get("settings") or {},
+               "updated": date.today().isoformat(), "source": f"usage-report {m['period'][0]}..{m['period'][1]}"}
+    os.makedirs(pdir, exist_ok=True)
     with open(ppath, "w", encoding="utf-8") as fh:
         json.dump(profile, fh, indent=1, ensure_ascii=False)
     profile_written = ppath
 
 print(json.dumps({"targets": len(targets), "claude_md_rules": len(lines), "allowlist": len(allow),
                   "slash_commands": len(nar.get("slash_commands") or []), "focus": focus,
-                  "profile": profile_written}, ensure_ascii=False))
+                  "coach": ("waits for the team lead's approval (coach-draft.json)" if approval and not args.no_profile
+                            else profile_written)}, ensure_ascii=False))

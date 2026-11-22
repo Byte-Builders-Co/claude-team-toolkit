@@ -25,7 +25,14 @@ You need Node.js 18+, Python 3.10+ with `matplotlib` and `tzdata` (`pip install 
    ```json
    { "cleanupPeriodDays": 90 }
    ```
-4. Restart Claude Code, then run `/prompt-coach:setup`. If your lead sent you a profile file, run `/prompt-coach:setup import <file>` instead.
+4. Restart Claude Code, then run `/prompt-coach:setup`.
+5. **Connect your Google Drive folder** (once). The lead shares a folder with your name with you.
+   - Install [Google Drive for desktop](https://www.google.com/drive/download/) and sign in with your work account.
+   - In drive.google.com > **Shared with me**, right-click your folder > **Organise > Add shortcut** > **My Drive**. A shared folder does not appear on your computer until you do this.
+   - Wait until it shows in File Explorer, usually as `G:\My Drive\<YourName>`, then run in Claude Code:
+     ```
+     /usage-report share "G:/My Drive/<YourName>"
+     ```
 
 ## Update (when the lead announces a new version)
 
@@ -35,26 +42,45 @@ claude plugin update usage-report@byte-builders-claude
 claude plugin update prompt-coach@byte-builders-claude
 ```
 
-## Every month (1st working day)
+## Every month
 
-1. Run `/usage-report` in Claude Code. It reports on the previous calendar month, using the team settings in `plugins/usage-report/skills/usage-report/team-config.json` (Mon–Sat, holidays, IST).
-2. Copy **only** `metrics.json`, `scores.json` and the `.docx` from `~/Documents/claude-usage-reports/<YYYY-MM>/` to the shared folder `Reports/<YYYY-MM>/<YourName>/`.
-3. Open `suggested/` in the same folder: it holds a `CLAUDE.md` snippet, a permissions allowlist and draft slash commands made from your own work. Use what helps.
+**Everyone (1st–5th of the month).** Claude reminds you at the start of a session until it is done.
+1. Run `/usage-report`. It reports on the previous calendar month (team settings: Mon–Sat, holidays, IST) and uploads **only** `metrics.json`, `scores.json`, `coach-draft.json` and the `.docx` to your Drive folder. If the upload fails, fix what it says and run `/usage-report upload`.
+2. Open `suggested/` in `~/Documents/claude-usage-reports/<YYYY-MM>/`: a `CLAUDE.md` snippet, a permissions allowlist and draft slash commands made from your own work. Use what helps.
+3. Your prompt coach does **not** change yet. The lead reviews your report first. When they approve, your coach updates at the start of a Claude Code session and tells you what changed.
 
-Never share `prompts.csv`, `sample.txt`, `narrative.json` or `suggested/`. They contain your raw prompts.
+`prompts.csv`, `sample.txt`, `narrative.json` and `suggested/` stay on your computer. They contain your raw prompts.
+
+**The lead (after the 5th).**
+1. `/usage-report team` reads everyone's files from Drive, says who is missing, updates the history, refreshes the team dashboard, and writes `review.md`: per person, what improved, what to work on next, and the proposed coach changes.
+2. Read the summary Claude shows, then approve or change it in plain words ("approve all, but keep Rushil on block mode").
+3. `/usage-report approve` releases the approved coach profiles to each person's Drive folder.
 
 ## For the lead
 
+**Google Drive setup (once).**
+1. In Google Drive, create `Claude Reports` with a sub-folder per person (names as in `team-config.json` > `members`) and `_team`.
+2. Share **each person's sub-folder only** with that person, as Editor. Do not share `Claude Reports` itself or `_team`: each person must see only their own files.
+3. Tell everyone to do install step 5.
+
+**Other settings.**
 - Add holidays to `team-config.json` before the 1st, commit, and ask everyone to update.
-- After everyone has submitted: `/usage-report team "<Reports>/<YYYY-MM>"`. This updates `Reports/history.json` (for the team dashboard) and writes `team_summary.md` and `team_note.md`.
-- Prompt-coach block mode stops bare pastes for 21 days after setup. Turn it off per person with `/prompt-coach:setup block off`, or set `"block_mode": "ask"`.
+- Coach settings per person (block mode, focus areas) are part of the monthly approval. Ask for changes during `/usage-report team`, for example "Rushil block mode off".
 
 ## Privacy
 
 - The report reads `~/.claude/projects` locally. Only a sample of prompts is read by Claude, in your own session.
-- The prompt coach runs locally with no network and no AI call. Its log (`~/.claude/prompt-coach/log.jsonl`) stores counts and flags, never prompt text.
+- The prompt coach runs locally with no network and no AI call. Its log (`~/.claude/prompt-coach/log.jsonl`) stores counts and flags, never prompt text. Only those counts go into `coach-draft.json`.
+- Drive gets only the four files listed above. Each person's Drive folder is shared with that person and the lead, nobody else.
 
 ## Release notes
+
+**usage-report v1.1.0 / prompt-coach v1.1.0: monthly loop through Google Drive, with lead approval**
+- The report uploads its shareable files to the person's Drive folder (`/usage-report share`, `/usage-report upload`). Raw prompts never leave the computer.
+- The report no longer changes the prompt coach directly. It writes `coach-draft.json`; the lead reviews it (`/usage-report team`) and approves it (`/usage-report approve`). The coach loads the approved profile at the next session start (SessionStart hook) and says once what changed. The lead's settings win; each person's language stays.
+- Reminder on the 1st–5th of the month until the report is in Drive.
+- `/prompt-coach:setup import` now lets the lead's settings win over local ones.
+- Team mode lists who has not submitted, refreshes the dashboard and writes `review.md` and `proposal.json`. The old `Reports/<YYYY-MM>/<Name>/` layout still works with `--month-dir`.
 
 **prompt-coach v1.0.3**
 - The coach now uses each person's `focus` areas from their profile, so it is stricter only on that person's weak habits:

@@ -1,5 +1,5 @@
 {
-  "description": "Prompt coach: restates vague prompts and stops bare pastes. Fails open: any error lets the prompt through unchanged.",
+  "description": "Prompt coach: restates vague prompts and stops bare pastes; at session start loads the coach profile the team lead approved (Google Drive). Fails open.",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -7,7 +7,23 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/coach.js"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/coach.js"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/sync.js"
+            ],
             "timeout": 10
           }
         ]

@@ -40,7 +40,8 @@ let prof = read(P, {});
 if (opt('import')) {
   const imp = read(opt('import'), null);
   if (!imp) { console.error(`Cannot read ${opt('import')}`); process.exit(1); }
-  prof = { ...imp, settings: { ...(imp.settings || {}), ...(prof.settings || {}) } };
+  // The lead's file wins on focus, tips, templates and settings; this person's name and language stay.
+  prof = { ...prof, ...imp, name: prof.name || imp.name, language: prof.language || imp.language, settings: { ...(prof.settings || {}), ...(imp.settings || {}) } };
 }
 prof.version = 1;
 if (opt('name')) prof.name = opt('name');

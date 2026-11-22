@@ -107,6 +107,34 @@ for (const [name, profile, expectNudge] of [['prompt 20, no focus (no nudge)', b
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`);
 }
 
+// ---- sync.js (1.1): lead-approved profile from the Drive folder ----
+const SYNC = path.join(__dirname, '..', 'scripts', 'sync.js');
+const share = path.join(tmp, 'drive', 'Test');
+fs.mkdirSync(path.join(share, 'coach'), { recursive: true });
+const localCfg = path.join(tmp, 'usage-report.local.json');
+fs.writeFileSync(localCfg, JSON.stringify({ share_dir: share }));
+fs.writeFileSync(path.join(tmp, 'profile.json'), JSON.stringify({ name: 'Test', language: 'gu', settings: { block_mode: 'block', tip_every: 1 } }));
+const runSync = () => spawnSync(process.execPath, [SYNC], { input: '{}', env: { ...process.env, PROMPT_COACH_DIR: tmp, USAGE_REPORT_LOCAL: localCfg }, encoding: 'utf8' });
+let rs = runSync();
+const okNone = rs.stdout === '' && rs.status === 0;
+if (!okNone) fail += 1;
+console.log(`${okNone ? 'PASS' : 'FAIL'}  sync: no approved profile yet (silent)`);
+fs.writeFileSync(path.join(share, 'coach', 'profile.json'), JSON.stringify({ rev: 1, focus: ['context'], tips: ['t'], templates: [], settings: { block_mode: 'off' }, approved_month: '2026-12' }));
+rs = runSync();
+const prof = JSON.parse(fs.readFileSync(path.join(tmp, 'profile.json'), 'utf8'));
+const okSync = /approved updated coaching/.test(rs.stdout) && /Gujarati/.test(rs.stdout) && prof.settings.block_mode === 'off' && prof.language === 'gu' && prof.approved_rev === 1;
+if (!okSync) fail += 1;
+console.log(`${okSync ? 'PASS' : 'FAIL'}  sync: loads approved profile, lead settings win, language stays`);
+rs = runSync();
+const okOnce = rs.stdout === '' && rs.status === 0;
+if (!okOnce) fail += 1;
+console.log(`${okOnce ? 'PASS' : 'FAIL'}  sync: tells the person only once`);
+fs.writeFileSync(path.join(share, 'coach', 'profile.json'), '{"rev": 2, "focus": [');  // half-synced file
+rs = runSync();
+const okHalf = rs.stdout === '' && rs.status === 0;
+if (!okHalf) fail += 1;
+console.log(`${okHalf ? 'PASS' : 'FAIL'}  sync: half-synced file is skipped`);
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(fail ? `\n${fail} failed` : '\nall passed');
 process.exit(fail ? 1 : 0);

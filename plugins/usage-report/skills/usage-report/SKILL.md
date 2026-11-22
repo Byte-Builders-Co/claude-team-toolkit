@@ -1,7 +1,7 @@
 ---
 name: usage-report
 description: Builds the monthly Claude Code usage and prompt-quality report (Leverage Score, plan fit, progress vs last month, coaching in Hindi or Gujarati, prompt templates and ready-made setup files) for one person from their local transcripts; or combines the team's reports into a team summary and dashboard history; or an org report from a Team/Enterprise export. Use when the user asks for their monthly Claude report, usage report, prompt-quality review, team summary, or mentions "usage KPI report".
-argument-hint: "[monthly YYYY-MM | team FOLDER | org]"
+argument-hint: "[monthly YYYY-MM | share FOLDER | upload | team YYYY-MM | approve | org]"
 ---
 
 # Claude Usage & Prompt-Quality Report (method v2)
@@ -13,14 +13,15 @@ Measure how well Claude Code is being used and how to use it better. The tone is
 | Mode | When | What to read |
 |---|---|---|
 | **Monthly / personal** (default) | Someone runs `/usage-report` or `/usage-report monthly [YYYY-MM]` | This file + [PERSONAL.md](PERSONAL.md) + [RUBRIC.md](RUBRIC.md) |
-| **Team** | `/usage-report team <folder>`: the lead has collected everyone's `metrics.json` + `scores.json` | [TEAM.md](TEAM.md) |
+| **Share setup** | `/usage-report share "<Drive folder>"` (once) or `/usage-report upload` (re-send this month) | `share.py`, below |
+| **Team** (lead) | `/usage-report team [YYYY-MM]` and `/usage-report approve`: review everyone's reports from Google Drive, refresh the dashboard, approve coach updates | [TEAM.md](TEAM.md) |
 | **Organisation** | A Team/Enterprise org export is present | [ORG-METHODOLOGY.md](ORG-METHODOLOGY.md) and [DATA-SOURCES.md](DATA-SOURCES.md) |
 
 ## Monthly mode
 
 **Settings come from `SKILL_DIR/team-config.json`**: time zone, working week (Mon–Sat), holidays, plan, price, language. Never ask for them.
 
-**Who the person is** is stored in `~/.claude/usage-report.local.json` as `{"name": "...", "language": "hi"}`.
+**Who the person is** is stored in `~/.claude/usage-report.local.json` as `{"name": "...", "language": "hi", "share_dir": "..."}`.
 - If the file is missing, ask once, in one message: name as it should appear on the report, and explanation language: Hindi (default) or Gujarati. Then write the file.
 - After that, ask nothing. Record any assumption in `methodology_extra` and keep going.
 
@@ -43,7 +44,14 @@ Measure how well Claude Code is being used and how to use it better. The tone is
 - [ ] 7. npm install --prefix OUT docx@9.5.1   (once per folder)
          node SKILL_DIR/scripts/build_report.js --out OUT
 - [ ] 8. Check: no "undefined"/"NaN" in the report, no secrets or third-party personal data in narrative.json.
+- [ ] 9. python SKILL_DIR/scripts/share.py --out OUT
+         Uploads metrics.json, scores.json, coach-draft.json and the .docx to the person's Google Drive folder.
+         If it prints "uploaded": false, tell the person the printed fix in one line.
 ```
+
+**Share setup.**
+- `share "<folder>"`: `python SKILL_DIR/scripts/share.py --set "<folder>"`. The folder is the person's own Drive folder that the lead shared with them (it shows in File Explorer under `G:\My Drive\<Name>` after "Add shortcut to My Drive"). If it fails, explain the printed fix in their language.
+- `upload`: `python SKILL_DIR/scripts/share.py --out ~/Documents/claude-usage-reports/<last month>`.
 
 ## Language rules (B5)
 
@@ -73,12 +81,14 @@ Items are `{"title","text"}` unless noted.
 - `data_handling_note`, `friction_note`: strings
 - `methodology_extra`: list of strings
 
-## What to send to the team lead
+## What goes to the team lead
 
-Tell the person to copy **only** `metrics.json`, `scores.json` and the `.docx` to the shared folder `Reports/<YYYY-MM>/<Name>/`.
-**Never send** `prompts.csv`, `sample.txt`, `sample_index.csv`, `judged_scores.csv`, `narrative.json`, `repeated_phrases.json`, `targets.json` or `suggested/`. They contain or quote raw prompts.
+Step 9 uploads **only** `metrics.json`, `scores.json`, `coach-draft.json` and the `.docx` to the person's Google Drive folder. Nothing needs copying by hand.
+**Never upload** `prompts.csv`, `sample.txt`, `sample_index.csv`, `judged_scores.csv`, `narrative.json`, `repeated_phrases.json`, `targets.json` or `suggested/`. They contain or quote raw prompts.
 
-Finish with three lines in the person's language: where the report is, that `suggested/` holds ready-to-use files, and that the prompt coach profile was updated (finalize.py prints the path).
+The prompt coach is **not** changed by this run when `team-config.json` has `"approval_required": true`. The report only proposes coach changes (`coach-draft.json`). The team lead reviews them, and the coach loads the approved version at the start of a later session.
+
+Finish with three lines in the person's language: where the report is, that `suggested/` holds ready-to-use files, and whether the upload worked (with `approval_required`: "your coach will update after the lead's review").
 
 ## Working rules
 
