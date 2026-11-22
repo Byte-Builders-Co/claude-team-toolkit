@@ -19,6 +19,8 @@ You need Node.js 18+, Python 3.10+ with `matplotlib` and `tzdata` (`pip install 
    claude plugin install prompt-coach@byte-builders-claude
    ```
    (Or inside Claude Code: `/plugin marketplace add Byte-Builders-Co/claude-team-toolkit`, then `/plugin install …`.)
+
+   If `marketplace add` fails with "Could not read from remote repository", your SSH key isn't set up for GitHub. Run `gh auth login`, then set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` in your environment and try again. You also need access to the repo: ask the lead to add you.
 3. Keep 90 days of history, so monthly reports are complete. Add this to `~/.claude/settings.json`:
    ```json
    { "cleanupPeriodDays": 90 }
