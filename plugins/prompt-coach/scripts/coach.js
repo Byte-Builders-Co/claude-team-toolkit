@@ -168,8 +168,8 @@ function decide(input, profile, state, now) {
       ctx.push(
         `[prompt-coach] This message may be missing: ${missing}.`,
         followup
-          ? 'Before acting, write ONE line starting with "**Understood:**" that says in simple English what the user most likely means, using the conversation so far.'
-          : 'Before acting, write ONE line starting with "**Restated:**" in simple English: "Goal: … | Scope: … | Done when: …". Fill gaps from the conversation and the code; mark guesses with "(?)".',
+          ? 'Before acting, write ONE line starting with "**Understood:**" that says what the user most likely means, using the conversation so far. Write this line in simple ENGLISH even if the user wrote in Hindi, Gujarati or Hinglish: it shows them how a clear prompt reads.'
+          : 'Before acting, write ONE line starting with "**Restated:**": "Goal: … | Scope: … | Done when: …". Write this line in simple ENGLISH even if the user wrote in Hindi, Gujarati or Hinglish: it shows them how a clear prompt reads. Fill gaps from the conversation and the code; mark guesses with "(?)".',
         'If the goal or the done-check really cannot be inferred and the work would change several files or take more than a few minutes, ask ONE question (AskUserQuestion with 2-4 options) and wait. Otherwise continue with the work using your restated version.',
         'Do not lecture and do not mention this note.',
       );
