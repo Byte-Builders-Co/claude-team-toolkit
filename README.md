@@ -61,7 +61,9 @@ claude plugin update prompt-coach@byte-builders-claude
 **Google Drive setup (once).**
 1. In Google Drive, create `Claude Reports` with a sub-folder per person (names as in `team-config.json` > `members`) and `_team`.
 2. Share **each person's sub-folder only** with that person, as Editor. Do not share `Claude Reports` itself or `_team`: each person must see only their own files.
-3. Tell everyone to do install step 5.
+3. Make a sub-folder for yourself too, and do install step 5 yourself: your own report and coach go through the same review.
+4. Copy the existing `history.json` and `kpi_history.csv` into `_team/`, so the dashboard keeps earlier months.
+5. Tell everyone to do install step 5.
 
 **Other settings.**
 - Add holidays to `team-config.json` before the 1st, commit, and ask everyone to update.
@@ -74,6 +76,9 @@ claude plugin update prompt-coach@byte-builders-claude
 - Drive gets only the four files listed above. Each person's Drive folder is shared with that person and the lead, nobody else.
 
 ## Release notes
+
+**usage-report v1.1.1**
+- Team mode stops instead of starting a new history when `_team/history.json` is missing (it would drop earlier months from the dashboard).
 
 **usage-report v1.1.0 / prompt-coach v1.1.0: monthly loop through Google Drive, with lead approval**
 - The report uploads its shareable files to the person's Drive folder (`/usage-report share`, `/usage-report upload`). Raw prompts never leave the computer.

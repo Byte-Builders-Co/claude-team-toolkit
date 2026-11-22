@@ -29,6 +29,7 @@ ap.add_argument("--month-dir", help="old layout: <month-dir>/<Name>/")
 ap.add_argument("--label", required=True, help="YYYY-MM")
 ap.add_argument("--history")
 ap.add_argument("--config", default=os.path.join(SKILL_DIR, "team-config.json"))
+ap.add_argument("--new-history", action="store_true", help="start a new history.json (only for a brand-new team)")
 args = ap.parse_args()
 if not (args.root or args.month_dir):
     ap.error("give --root (Google Drive layout) or --month-dir (old layout)")
@@ -54,6 +55,9 @@ else:
     HISTORY = args.history or os.path.join(os.path.dirname(os.path.abspath(args.month_dir)), "history.json")
     dirs = {n: os.path.join(args.month_dir, n) for n in sorted(os.listdir(args.month_dir))
             if os.path.isdir(os.path.join(args.month_dir, n))}
+if not os.path.exists(HISTORY) and not args.new_history:
+    raise SystemExit(f"STOP: no history at {HISTORY}. Starting a new one would drop earlier months from the dashboard. "
+                     "Copy the existing history.json and kpi_history.csv there first, or pass --new-history for a brand-new team.")
 os.makedirs(TEAM_DIR, exist_ok=True)
 
 members, periods, review = {}, [], {}

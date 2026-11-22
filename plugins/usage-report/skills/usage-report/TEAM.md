@@ -19,6 +19,11 @@ Claude Reports/                    owned by the lead
 
 One writer per file: the member writes `<Name>/<YYYY-MM>/`, the lead writes `<Name>/coach/` and `_team/`. Never edit a member's month folder or hand-edit a `profile.json`.
 
+## First time only
+
+- If `ROOT/_team/history.json` does not exist, copy the existing `history.json` and `kpi_history.csv` (the lead knows where: for Byte-Builders they are in `Downloads/Claude Usages Reports/`) into `ROOT/_team/` before step 1. team_summary.py stops with "STOP: no history" otherwise; never pass `--new-history` unless the lead says the team is brand new.
+- The lead's own report works like everyone else's: the lead has a sub-folder too, sets it with `/usage-report share`, and approves their own coach profile in the same proposal.
+
 ## `/usage-report team [YYYY-MM]` (default: last month)
 
 ```
