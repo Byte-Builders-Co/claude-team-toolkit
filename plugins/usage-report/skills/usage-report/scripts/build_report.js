@@ -1,8 +1,8 @@
 // Builds the personal report .docx from DIR/metrics.json, DIR/scores.json, DIR/narrative.json and the charts.
 // Usage: node build_report.js --out DIR      (needs the `docx` npm package: npm install --prefix DIR docx@9.5.1)
 // Output: DIR/claude-usage-report_<person-slug>_<start>_to_<end>.docx  (no spaces in the file name)
-// Language: narrative.language = "hi" (default), "gu" or "en". Headings and labels follow it; numbers and
-// English prompt examples stay as they are.
+// Language: team-config.json "report_language" ("en" for Byte-Builders: the lead reads everyone's report) wins;
+// otherwise narrative.language = "en" (default), "hi" or "gu". Headings and labels follow it.
 const fs = require('fs');
 const path = require('path');
 
@@ -19,7 +19,22 @@ const read = (f) => JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8'));
 const m = read('metrics.json');
 const s = read('scores.json');
 const nar = read('narrative.json');
-const LANG = ['hi', 'gu', 'en'].includes(nar.language) ? nar.language : 'hi';
+let CFG = {};
+try { CFG = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'team-config.json'), 'utf8')); } catch (e) { /* defaults */ }
+const pickLang = (v) => (['hi', 'gu', 'en'].includes(v) ? v : null);
+const LANG = pickLang(CFG.report_language) || pickLang(nar.language) || 'en';
+if (LANG === 'en') {
+  // coach_tips go to the person's prompt coach (their own language) and are not printed in the report.
+  const { coach_tips, ...printed } = nar;
+  const bad = [];
+  const walk = (v, at) => {
+    if (typeof v === 'string') { if (/[ऀ-ॿ઀-૿]/.test(v)) bad.push(at); }
+    else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${at}[${i}]`));
+    else if (v && typeof v === 'object') Object.entries(v).forEach(([k, x]) => walk(x, at ? `${at}.${k}` : k));
+  };
+  walk(printed, '');
+  if (bad.length) console.error(`WARNING: report language is English but these narrative.json fields have Hindi/Gujarati text: ${bad.slice(0, 15).join(', ')}${bad.length > 15 ? ' …' : ''}. Rewrite them in simple English and build again.`);
+}
 
 // ---- labels -------------------------------------------------------------------------------
 const T = {

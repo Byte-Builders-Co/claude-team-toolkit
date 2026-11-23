@@ -22,15 +22,18 @@
   "price_month": 20,
   "currency": "USD",
   "language": "hi",
+  "report_language": "en",
   "sample_size": 45,
   "method_version": 2,
   "members": [
     "Avinash",
     "Hitarth",
     "Manav",
+    "Marmeek",
     "Nakul",
     "Rushil",
-    "Savan"
+    "Savan",
+    "Sumit"
   ],
   "approval_required": true,
   "dashboard_url": "https://claude.ai/artifact/LukLMmPcdQtdmqvPwguUzH",

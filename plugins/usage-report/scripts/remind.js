@@ -13,7 +13,7 @@ const LOCAL_CFG = process.env.USAGE_REPORT_LOCAL || path.join(HOME, '.claude', '
 const STATE = process.env.USAGE_REPORT_REMIND_STATE || path.join(HOME, '.claude', 'usage-report.remind.json');
 const REPORTS = process.env.USAGE_REPORT_DIR || path.join(HOME, 'Documents', 'claude-usage-reports');
 const TEAM_CFG = path.join(__dirname, '..', 'skills', 'usage-report', 'team-config.json');
-const LANG = { hi: 'Hindi (Devanagari script, technical words in English)', gu: 'Gujarati (Gujarati script, technical words in English)' };
+const LANG = { hi: 'Hindi (Devanagari script, technical words in English)', gu: 'Gujarati (Gujarati script, technical words in English)', en: 'simple English' };
 
 async function readJSON(p) { try { return JSON.parse(await fsp.readFile(p, 'utf8')); } catch (e) { return null; } }
 async function exists(p) { try { await fsp.access(p); return true; } catch (e) { return false; } }

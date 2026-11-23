@@ -8,12 +8,12 @@
     {
       "name": "usage-report",
       "source": "./plugins/usage-report",
-      "description": "Monthly Claude Code usage and prompt-quality report with Hindi/Gujarati coaching."
+      "description": "Monthly Claude Code usage and prompt-quality report in simple English."
     },
     {
       "name": "prompt-coach",
       "source": "./plugins/prompt-coach",
-      "description": "Restates vague prompts as Goal / Scope / Done when with a Hindi or Gujarati tip, stops bare pastes, and adds /prompt-coach:p."
+      "description": "Restates vague prompts as Goal / Scope / Done when with a short tip in Hindi, Gujarati or English, stops bare pastes, and adds /prompt-coach:p."
     }
   ]
 }

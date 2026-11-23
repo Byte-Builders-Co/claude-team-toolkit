@@ -21,6 +21,13 @@ One writer per file: the member writes `<Name>/<YYYY-MM>/`, the lead writes `<Na
 
 ## First time only
 
+Google Drive setup (the lead does this once):
+1. In Google Drive, create `Claude Reports` with a sub-folder per person (names as in `team-config.json` > `members`) and `_team`.
+2. Share **each person's sub-folder only** with that person, as Editor. Never share `Claude Reports` itself or `_team`.
+3. The lead has a sub-folder too and runs `/usage-report share` for it: their own report and coach go through the same review.
+4. Tell everyone to do install step 5 in the README (add the shortcut to My Drive, then `/usage-report share`).
+5. Holidays: add them to `team-config.json` before the 1st, commit, and ask everyone to update the plugin.
+
 - If `ROOT/_team/history.json` does not exist, copy the existing `history.json` and `kpi_history.csv` (the lead knows where: for Byte-Builders they are in `Downloads/Claude Usages Reports/`) into `ROOT/_team/` before step 1. team_summary.py stops with "STOP: no history" otherwise; never pass `--new-history` unless the lead says the team is brand new.
 - The lead's own report works like everyone else's: the lead has a sub-folder too, sets it with `/usage-report share`, and approves their own coach profile in the same proposal.
 

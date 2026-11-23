@@ -32,7 +32,11 @@ def load(name):
 
 
 m, s, nar = load("metrics.json"), load("scores.json"), load("narrative.json")
-lang = nar.get("language") or "hi"
+try:
+    _local = json.load(open(os.environ.get("USAGE_REPORT_LOCAL") or os.path.join(os.path.expanduser("~"), ".claude", "usage-report.local.json"), encoding="utf-8"))
+except Exception:
+    _local = {}
+lang = _local.get("language") or "hi"  # the person's coach language (coach_tips); the report itself is in report_language
 SUG = os.path.join(OUT, "suggested")
 os.makedirs(os.path.join(SUG, "commands"), exist_ok=True)
 

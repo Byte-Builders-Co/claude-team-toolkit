@@ -1,6 +1,6 @@
 ---
 name: usage-report
-description: Builds the monthly Claude Code usage and prompt-quality report (Leverage Score, plan fit, progress vs last month, coaching in Hindi or Gujarati, prompt templates and ready-made setup files) for one person from their local transcripts; or combines the team's reports into a team summary and dashboard history; or an org report from a Team/Enterprise export. Use when the user asks for their monthly Claude report, usage report, prompt-quality review, team summary, or mentions "usage KPI report".
+description: Builds the monthly Claude Code usage and prompt-quality report (Leverage Score, plan fit, progress vs last month, in simple English, prompt templates and ready-made setup files) for one person from their local transcripts; or combines the team's reports into a team summary and dashboard history; or an org report from a Team/Enterprise export. Use when the user asks for their monthly Claude report, usage report, prompt-quality review, team summary, or mentions "usage KPI report".
 argument-hint: "[monthly YYYY-MM | share FOLDER | upload | team YYYY-MM | approve | org]"
 ---
 
@@ -19,10 +19,10 @@ Measure how well Claude Code is being used and how to use it better. The tone is
 
 ## Monthly mode
 
-**Settings come from `SKILL_DIR/team-config.json`**: time zone, working week (Mon–Sat), holidays, plan, price, language. Never ask for them.
+**Settings come from `SKILL_DIR/team-config.json`**: time zone, working week (Mon–Sat), holidays, plan, price, `report_language` (the report) and `language` (default coach language). Never ask for them.
 
 **Who the person is** is stored in `~/.claude/usage-report.local.json` as `{"name": "...", "language": "hi", "share_dir": "..."}`.
-- If the file is missing, ask once, in one message: name as it should appear on the report, and explanation language: Hindi (default) or Gujarati. Then write the file.
+- If the file is missing, ask once, in one message: name as it should appear on the report, and the language for their prompt-coach tips: Hindi (default), Gujarati or English. Then write the file. `language` is only for coach tips; the report is always in `report_language`.
 - After that, ask nothing. Record any assumption in `methodology_extra` and keep going.
 
 **Period:** `monthly` with no month = the previous calendar month. `monthly 2026-12` = that month.
@@ -39,30 +39,31 @@ Measure how well Claude Code is being used and how to use it better. The tone is
 - [ ] 3. python SKILL_DIR/scripts/score.py --out OUT
 - [ ] 4. python SKILL_DIR/scripts/charts.py --out OUT
 - [ ] 5. Read OUT/repeated_phrases.json and OUT/scores.json (incl. "progress"), then write OUT/narrative.json
-         (schema below) in the person's language. Every number comes from metrics.json or scores.json.
+         (schema below) in simple English (`"language": "en"`); only `coach_tips` in the person's coach language. Every number comes from metrics.json or scores.json.
 - [ ] 6. python SKILL_DIR/scripts/finalize.py --out OUT
 - [ ] 7. npm install --prefix OUT docx@9.5.1   (once per folder)
          node SKILL_DIR/scripts/build_report.js --out OUT
-- [ ] 8. Check: no "undefined"/"NaN" in the report, no secrets or third-party personal data in narrative.json.
+- [ ] 8. Check: no "undefined"/"NaN" in the report, no WARNING about Hindi/Gujarati text from build_report.js (fix narrative.json and build again), no secrets or third-party personal data in narrative.json.
 - [ ] 9. python SKILL_DIR/scripts/share.py --out OUT
          Uploads metrics.json, scores.json, coach-draft.json and the .docx to the person's Google Drive folder.
          If it prints "uploaded": false, tell the person the printed fix in one line.
 ```
 
 **Share setup.**
-- `share "<folder>"`: `python SKILL_DIR/scripts/share.py --set "<folder>"`. The folder is the person's own Drive folder that the lead shared with them (it shows in File Explorer under `G:\My Drive\<Name>` after "Add shortcut to My Drive"). If it fails, explain the printed fix in their language.
+- `share "<folder>"`: `python SKILL_DIR/scripts/share.py --set "<folder>"`. The folder is the person's own Drive folder that the lead shared with them (it shows in File Explorer under `G:\My Drive\<Name>` after "Add shortcut to My Drive"). If it fails, explain the printed fix in one line.
 - `upload`: `python SKILL_DIR/scripts/share.py --out ~/Documents/claude-usage-reports/<last month>`.
 
 ## Language rules (B5)
 
-- **Explanations** (wins, opportunities, readings, weakest, `why`, tips, lessons, targets text, habits, notes): in the person's language. Hindi = Devanagari script, keeping technical terms in English (plan mode, test, CLAUDE.md, session, prompt, hook). Gujarati = Gujarati script, same rule.
-- **Prompts stay in simple English**: every `after` rewrite, every template, `better_prompt`, `claude_md_snippet` lines and slash-command bodies. These are what the person will type or paste, so they must be clear, short English (B1-level vocabulary, no idioms).
-- **Never penalise** spelling, grammar, or writing in Hindi/Gujarati/Hinglish. Judge only whether the goal, target, constraints and done-check are present (see RUBRIC.md).
+- **The whole report is in simple English** (`team-config.json` → `"report_language": "en"`), whoever it is for, so the team lead can read any member's report. Short sentences, B1-level words, no idioms. Every narrative field is English: wins, opportunities, readings, weakest, `why`, `tip`, lessons, targets text, habits, notes.
+- **Only `coach_tips` use the person's coach language** (`language` in `~/.claude/usage-report.local.json`: Hindi = Devanagari, Gujarati = Gujarati script, technical words in English; or English). They go to the prompt coach after the lead approves them and are not printed in the report.
+- **Prompts stay in simple English**: every `after` rewrite, every template, `better_prompt`, `claude_md_snippet` lines and slash-command bodies.
+- **Never penalise** spelling, grammar, or writing in Hindi/Gujarati/Hinglish. Judge only whether the goal, target, constraints and done-check are present (see RUBRIC.md). A `before` quote may keep the person's own words.
 
 ## narrative.json schema (v2)
 
 Items are `{"title","text"}` unless noted.
-- `language`: "hi" | "gu" | "en"; `person`: string (also used in the file name)
+- `language`: "en" (the report language); `person`: string (also used in the file name)
 - `wins[3]`, `opportunities[3]`
 - `progress_note`: string, only when scores.json has `progress`. Say what improved and what did not, and whether last month's targets were met. Mention when last month used method v1.
 - `plan_fit_text`: string; `plan_fit_actions[2-3]`
@@ -70,13 +71,13 @@ Items are `{"title","text"}` unless noted.
 - `dimension_readings`: `{goal, context, specificity, output, steering, technique}`, short strings
 - `trend_note`: string
 - `weakest[2]`: the two weakest dimensions, with "what good looks like"
-- `rewrites[3-5]`: `{"label","before","after","why"}`. `before` = the person's real prompt (redacted, ≤60 words), `after` = simple English, `why` = one sentence in their language
-- `templates[4-5]`: `{"task","template","tip"}` (B2). Built from the person's most common use cases and their real project names. `template` is fill-in-the-blank English with `___`, and always ends with a "Done when ___" clause. `tip` is one line in their language.
+- `rewrites[3-5]`: `{"label","before","after","why"}`. `before` = the person's real prompt (redacted, ≤60 words), `after` = simple English, `why` = one sentence
+- `templates[4-5]`: `{"task","template","tip"}` (B2). Built from the person's most common use cases and their real project names. `template` is fill-in-the-blank English with `___`, and always ends with a "Done when ___" clause. `tip` is one line.
 - `expensive_session` (B8): from the `=== EXPENSIVE` block in sample.txt: `{"title","what_happened","cost","better_prompt","lesson"}`
-- `targets[3]` (B7): `{"metric","target","text"}`. `metric` must be a key of `scores.kpis`. Pick the three with the most room to improve, set a realistic next-month number (e.g. done-check 0.05 → 0.20, not 0.80), `text` in their language.
+- `targets[3]` (B7): `{"metric","target","text"}`. `metric` must be a key of `scores.kpis`. Pick the three with the most room to improve, set a realistic next-month number (e.g. done-check 0.05 → 0.20, not 0.80), `text` in simple English.
 - `claude_md_snippet[3-8]` (B3): English rules drawn from repeated_phrases.json and the sample ("Use newcolor.ts for colours", "Run pint and phpstan before saying you are done"). Skip phrases that are not rules.
 - `slash_commands[0-2]` (B4): `{"name","description","body"}` for multi-step tasks the person repeated. The body is an English prompt that ends with `$ARGUMENTS`.
-- `coach_tips[3-5]`: very short tips in their language for the prompt coach ("अंत में लिखें: Done when ...")
+- `coach_tips[3-5]`: very short tips for the prompt coach, in the person's coach language ("अंत में लिखें: Done when ..." for Hindi, 'End with "Done when ..."' for English)
 - `habits[5]`
 - `data_handling_note`, `friction_note`: strings
 - `methodology_extra`: list of strings
@@ -88,7 +89,7 @@ Step 9 uploads **only** `metrics.json`, `scores.json`, `coach-draft.json` and th
 
 The prompt coach is **not** changed by this run when `team-config.json` has `"approval_required": true`. The report only proposes coach changes (`coach-draft.json`). The team lead reviews them, and the coach loads the approved version at the start of a later session.
 
-Finish with three lines in the person's language: where the report is, that `suggested/` holds ready-to-use files, and whether the upload worked (with `approval_required`: "your coach will update after the lead's review").
+Finish with three lines in simple English: where the report is, that `suggested/` holds ready-to-use files, and whether the upload worked (with `approval_required`: "your coach will update after the lead's review").
 
 ## Working rules
 
