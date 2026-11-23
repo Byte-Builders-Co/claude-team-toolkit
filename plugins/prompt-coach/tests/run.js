@@ -89,7 +89,8 @@ const focusCases = [
   ['multi-file task, already in plan mode (none)', { ...base, focus: ['plan_mode'] }, { prompt: big, permission_mode: 'plan' }, (g) => g === 'none'],
   ['paste + 5 words, no focus (coach, not block)', base, { prompt: paste7 }, (g) => g !== 'block'],
   ['paste + 5 words, bare_paste focus (block)', { ...base, focus: ['bare_paste'] }, { prompt: paste7 }, (g) => g === 'block'],
-  ['unknown focus value is ignored', { ...base, focus: ['nonsense', 42] }, { prompt: noWhere }, (g) => g === 'none'],
+  ['English profile: tip in simple English', { ...base, language: 'en', focus: ['done_check'] }, { prompt: long45 }, (g) => /line in simple English, starting with "💡 Tip:"/.test(g) && /End with "Done when/.test(g)],
+  ['unknown focus value is ignored',{ ...base, focus: ['nonsense', 42] }, { prompt: noWhere }, (g) => g === 'none'],
 ];
 for (const [name, profile, input, check] of focusCases) {
   const got = runWith(profile, { ...input, session_id: `f${sid++}` });

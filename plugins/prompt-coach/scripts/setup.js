@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // prompt-coach setup and status.
-// node setup.js --name "Avinash" [--language hi|gu] [--block block|ask|off] [--days 21] [--enable|--disable]
+// node setup.js --name "Avinash" [--language hi|gu|en] [--block block|ask|off] [--days 21] [--enable|--disable]
 // node setup.js --import path/to/profile.json      (profile prepared by the team lead)
 // node setup.js --status                           (last 30 days, from log.jsonl; no prompt text is stored)
 'use strict';
@@ -46,7 +46,7 @@ if (opt('import')) {
 prof.version = 1;
 if (opt('name')) prof.name = opt('name');
 if (opt('language')) {
-  if (!['hi', 'gu'].includes(opt('language'))) { console.error('--language must be hi or gu'); process.exit(1); }
+  if (!['hi', 'gu', 'en'].includes(opt('language'))) { console.error('--language must be hi, gu or en'); process.exit(1); }
   prof.language = opt('language');
 }
 prof.language = prof.language || 'hi';

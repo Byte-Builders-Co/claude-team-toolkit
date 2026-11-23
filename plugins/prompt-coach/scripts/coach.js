@@ -58,6 +58,21 @@ const MSG = {
       '3 થી વધુ files વાળા કામ માટે પહેલાં plan માંગો (Shift+Tab = plan mode).'],
     longSession: 'આ session લાંબું થઈ ગયું છે. આગળનું કામ નવા session માં શરૂ કરો (અથવા /compact ચલાવો) — જવાબ વધુ સારા અને usage ઓછું થશે.',
   },
+  en: {
+    langName: 'simple English',
+    tipPrefix: '💡 Tip:',
+    block: (example) => [
+      '✋ Prompt coach: you sent only a paste, with no instruction.',
+      'Add one line above the paste: what to do, and when the work counts as done.',
+      `Example: ${example}`,
+      '(Your paste is below under "Original prompt". Copy it, add one line above it and send again.)',
+    ].join('\n'),
+    defaultTips: ['End with "Done when ..." (which test passes or what shows on screen).',
+      'Say why in one line: who it is for and what the problem is.',
+      'Always add one line with a paste or screenshot: what to do.',
+      'For work across more than 3 files, ask for a plan first (Shift+Tab = plan mode).'],
+    longSession: 'This session is getting long. Start the next task in a new session (or run /compact) for better answers and lower usage.',
+  },
 };
 const EXAMPLE = 'Fix this error on the checkout page. Done when the payment test passes.';
 

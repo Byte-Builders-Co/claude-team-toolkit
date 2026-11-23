@@ -19,7 +19,7 @@ The user's rough request is: $ARGUMENTS
    Reply with: <format of the answer, e.g. root cause in 2 lines + files changed>
    ```
    Keep every line short. Mark anything you guessed with "(?)".
-3. Under it, explain in one or two lines **in the user's language** (from `~/.claude/prompt-coach/profile.json` → `language`; Hindi by default, Gujarati if "gu"; technical words stay English) what you added and why it helps.
+3. Under it, explain in one or two lines **in the user's language** (from `~/.claude/prompt-coach/profile.json` → `language`; Hindi by default, Gujarati if "gu", simple English if "en"; technical words stay English) what you added and why it helps.
 4. Ask with AskUserQuestion: **Run this** / **Edit first** / **Cancel**.
    - Run this → do the work exactly as the improved prompt says, including the Done-when check.
    - Edit first → ask what to change, show the new version, and ask again.

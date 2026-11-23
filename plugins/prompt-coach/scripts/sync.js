@@ -20,7 +20,7 @@ const FOCUS_TEXT = {
   long_sessions: 'start a new session for each new task',
   plan_mode: 'use plan mode (Shift+Tab) for multi-file tasks',
 };
-const LANG = { hi: 'Hindi (Devanagari script, technical words in English)', gu: 'Gujarati (Gujarati script, technical words in English)' };
+const LANG = { hi: 'Hindi (Devanagari script, technical words in English)', gu: 'Gujarati (Gujarati script, technical words in English)', en: 'simple English' };
 
 async function readJSON(p) {
   try { return JSON.parse(await fsp.readFile(p, 'utf8')); } catch (e) { return null; }

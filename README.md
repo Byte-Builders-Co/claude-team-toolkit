@@ -77,6 +77,9 @@ claude plugin update prompt-coach@byte-builders-claude
 
 ## Release notes
 
+**prompt-coach v1.1.1**
+- English is now a coach language (`/prompt-coach:setup language en`), next to Hindi and Gujarati.
+
 **usage-report v1.1.1**
 - Team mode stops instead of starting a new history when `_team/history.json` is missing (it would drop earlier months from the dashboard).
 
